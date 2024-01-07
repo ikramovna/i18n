@@ -1,5 +1,9 @@
 asgiref==3.7.2
 Django==5.0.1
+django-admin-sortable2==2.1.10
+django-cors-headers==4.3.1
+django-orderable==6.1.2
+django-orderable-inlines==0.0.6
 django-parler==2.3
 django-parler-rest==2.2
 djangorestframework==3.14.0
