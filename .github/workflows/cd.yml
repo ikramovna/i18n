@@ -1,0 +1,42 @@
+name: I18N CD
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  run-test:
+    services:
+      postgres:
+        image: postgres:14.8
+        env:
+          POSTGRES_DB: infonex
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 1
+        ports:
+          - 5432:5432
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_SETTINGS_MODULE: root.settings
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.10.5
+      - name: requirements
+        run: pip install -r requirements.txt
+  deploy:
+    runs-on: ubuntu-latest
+    needs: run-test
+    steps:
+      - name: Deploy to digitalocean
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 207.154.212.9
+          username: root
+          key: ${{ secrets.KEY }}
+          script: |
+            cd InfoNex/
+            git pull
+            pip install -r requirements.txt
+            sudo systemctl restart gunicorn.socket gunicorn.service

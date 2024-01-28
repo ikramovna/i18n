@@ -1,7 +1,8 @@
 from parler_rest.serializers import TranslatableModelSerializer
 from parler_rest.fields import TranslatedFieldsField
+from rest_framework import serializers
 
-from product.models import Product
+from product.models import Product, Test
 
 
 class ProductTranslatableModelSerializer(TranslatableModelSerializer):
@@ -11,9 +12,8 @@ class ProductTranslatableModelSerializer(TranslatableModelSerializer):
         model = Product
         fields = ('id', 'translations', 'price', 'image')
 
-    def create(self, validated_data):
-        translations_data = validated_data.pop('translations')
-        product = Product.objects.create(**validated_data)
-        for language_code, translation_data in translations_data.items():
-            product.create_translation(language_code, **translation_data)
-        return product
+
+class TestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Test
+        fields = ('id', 'name', 'date', 'description')

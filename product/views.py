@@ -1,10 +1,13 @@
-from django.http import Http404
-from django.utils.translation import get_language, gettext as _
-from rest_framework.generics import CreateAPIView, ListAPIView
+import base64
+import json
 
-from product.models import Product
-from product.serializers import ProductTranslatableModelSerializer
-from root import settings
+from cryptography.fernet import Fernet
+from django.utils.translation import get_language
+from rest_framework.generics import CreateAPIView, ListAPIView, ListCreateAPIView
+from rest_framework.response import Response
+
+from product.models import Product, Test
+from product.serializers import ProductTranslatableModelSerializer, TestSerializer
 
 
 class ProductCreateAPIView(CreateAPIView):
@@ -21,6 +24,7 @@ class ProductCreateAPIView(CreateAPIView):
          },
        "price": "20.00",
        "image": null
+       }
      }
      ```
      """
@@ -29,14 +33,36 @@ class ProductCreateAPIView(CreateAPIView):
 
 class ProductListAPIView(ListAPIView):
     """
-    Enter language prefix in the url to get the product in the desired language
-    """
+        List a products
+
+        Example Request Body:
+        ```text
+        Enter language prefix in the url to get the product in the desired language
+        ```
+        """
+
     serializer_class = ProductTranslatableModelSerializer
 
     def get_queryset(self, *args, **kwargs):
         language_code = self.kwargs.get('language_prefix', get_language())
-
-        if language_code not in [language['code'] for language in settings.PARLER_LANGUAGES[None]]:
-            raise Http404(_("Language code is not valid"))
-
         return Product.objects.filter(translations__language_code=language_code)
+
+
+class TestDataListView(ListCreateAPIView):
+    queryset = Test.objects.all()
+    serializer_class = TestSerializer
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+
+        # Use a static key
+        key = base64.urlsafe_b64encode(b'nmadrnma'.ljust(32))  # Replace with your actual key
+
+        # Initialize the Fernet class with the key
+        fernet = Fernet(key)
+
+        # Encrypt the serialized data
+        encrypted_data = fernet.encrypt(json.dumps(serializer.data).encode())
+
+        return Response(encrypted_data)
