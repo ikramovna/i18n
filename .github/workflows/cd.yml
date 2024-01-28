@@ -36,7 +36,7 @@ jobs:
           username: root
           key: ${{ secrets.KEY }}
           script: |
-            cd InfoNex/
+            cd i18n/
             git pull
             pip install -r requirements.txt
             sudo systemctl restart gunicorn.socket gunicorn.service
